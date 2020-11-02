@@ -256,18 +256,19 @@ if [ -f "$OPPRODUCT_IMAGE" ]; then
    sudo umount $OPPRODUCT/
 fi
 
+if [ -f "$SYSTEM_EXT_IMAGE" ]; then
 echo "-> Copy system_ext files to system_new"
-if [ -d "$SYSTEM_NEW/dev/" ]; then
-   echo " - Using SAR method"
-   cd $LOCALDIR/system_new/
-   rm -rf system_ext; cd system; rm -rf system_ext
-   mkdir -p system_ext/
-   cp -v -r -p $SYSTEM_EXT/* system_ext/ > /dev/null 2>&1
-   cd ../
-   echo " - Fix symlink in system_ext"
-   ln -s /system/system_ext/ system_ext
-   sync
-   echo " - Fixed"
+   if [ -d "$SYSTEM_NEW/dev/" ]; then
+      echo " - Using SAR method"
+      cd $LOCALDIR/system_new/
+      rm -rf system_ext; cd system; rm -rf system_ext
+      mkdir -p system_ext/
+      cp -v -r -p $SYSTEM_EXT/* system_ext/ > /dev/null 2>&1
+      cd ../
+      echo " - Fix symlink in system_ext"
+      ln -s /system/system_ext/ system_ext
+      sync
+      echo " - Fixed"
 else
    if [ ! -f "$SYSTEM_NEW/build.prop" ]; then
       echo " - Are you sure this is a Android image?"
@@ -278,6 +279,7 @@ else
    mkdir system_ext && cd ../
    cp -v -r -p $SYSTEM_EXT/* $SYSTEM_NEW/system_ext/ > /dev/null 2>&1 && sync
    cd $LOCALDIR
+   fi
 fi
 cd $LOCALDIR
 
