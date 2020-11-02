@@ -139,6 +139,8 @@ if [ -f "$OPPRODUCT_IMAGE" ]; then
       fi
    fi
    echo " - Done: opproduct"
+else
+   echo " - opproduct don't exists, be careful!"
 fi
 
 # product.img
