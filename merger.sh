@@ -292,7 +292,7 @@ echo " - Umount system_new"
 sudo umount $SYSTEM_NEW/
 
 echo "-> Remove tmp folders and files"
-sudo rm -rf $SYSTEM $SYSTEM_NEW $PRODUCT $SYSTEM_IMAGE $PRODUCT_IMAGE $SYSTEM_EXT $SYSTEM_EXT_IMAGE
+sudo rm -rf $SYSTEM $SYSTEM_NEW $PRODUCT $SYSTEM_IMAGE $PRODUCT_IMAGE $SYSTEM_EXT $SYSTEM_EXT_IMAGE $OPPRODUCT $OPPRODUCT_IMAGE
 
 echo " - Zip system_new.img"
 zip system.img.zip $SYSTEM_NEW_IMAGE
