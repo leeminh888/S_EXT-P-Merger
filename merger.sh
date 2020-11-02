@@ -26,6 +26,10 @@ SYSTEM_IMAGE="$LOCALDIR/system.img"
 PRODUCT="$LOCALDIR/product"
 PRODUCT_IMAGE="$LOCALDIR/product.img"
 
+## Mount Point vars for opproduct
+OPPRODUCT="$LOCALDIR/opproduct"
+OPPRODUCT_IMAGE="$LOCALDIR/opproduct.img"
+
 ## Mount Point vars for system_ext
 SYSTEM_EXT="$LOCALDIR/system_ext"
 SYSTEM_EXT_IMAGE="$LOCALDIR/system_ext.img"
@@ -123,6 +127,20 @@ else
    exit 1
 fi
 
+# opproduct.img
+echo "-> Check mount/etc for opproduct.img"
+if [ -f "$OPPRODUCT_IMAGE" ]; then
+   echo " - opproduct detected!"
+   # Check if product is mounted
+   if [ -d "$OPPRODUCT" ]; then
+      if [ -d "$OPPRODUCT/etc/" ]; then
+         echo " - Mount detected in opproduct, force umount!"
+         sudo umount "$OPPRODUCT/"
+      fi
+   fi
+   echo " - Done: opproduct"
+fi
+
 # product.img
 echo "-> Check mount/etc for system_ext.img"
 if [ -f "$SYSTEM_EXT_IMAGE" ]; then
@@ -156,6 +174,14 @@ if [ ! -d "$PRODUCT/" ]; then
    mkdir $PRODUCT
 fi
 sudo mount -o ro $PRODUCT_IMAGE $PRODUCT/
+
+if [ -f "$OPPRODUCT_IMAGE" ]; then
+   echo " - Mount product"
+   if [ ! -d "$OPPRODUCT/" ]; then
+      mkdir $OPPRODUCT
+   fi
+   sudo mount -o ro $OPPRODUCT_IMAGE $OPPRODUCT/
+fi
 
 if [ -f "$SYSTEM_EXT_IMAGE" ]; then
    echo " - Mount system_ext"
@@ -197,6 +223,38 @@ cd $LOCALDIR
 
 echo " - Umount product"
 sudo umount $PRODUCT/
+
+if [ -f "$OPPRODUCT_IMAGE" ]; then
+echo "-> Copy opproduct files to system_new"
+   if [ -d "$SYSTEM_NEW/dev/" ]; then
+      echo " - Using SAR method"
+      cd $LOCALDIR/system_new/
+      rm -rf oneplus; cd system; rm -rf oneplus
+      mkdir -p oneplus/
+      cp -v -r -p $OPPRODUCT/* oneplus/ > /dev/null 2>&1
+      cd ../
+      echo " - Fix symlink in opproduct"
+      ln -s /system/oneplus/ oneplus
+      sync
+      echo " - Fixed"
+else
+   if [ ! -f "$SYSTEM_NEW/build.prop" ]; then
+      echo " - Are you sure this is a Android image?"
+      exit 1
+   fi
+   cd $SYSTEM_NEW
+   rm -rf oneplus
+   mkdir oneplus && cd ../
+   cp -v -r -p $OPPRODUCT/* $SYSTEM_NEW/oneplus/ > /dev/null 2>&1 && sync
+   cd $LOCALDIR
+   fi
+fi
+cd $LOCALDIR
+
+if [ -f "$OPPRODUCT_IMAGE" ]; then
+   echo " - Umount opproduct"
+   sudo umount $OPPRODUCT/
+fi
 
 echo "-> Copy system_ext files to system_new"
 if [ -d "$SYSTEM_NEW/dev/" ]; then
