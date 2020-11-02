@@ -157,11 +157,13 @@ if [ ! -d "$PRODUCT/" ]; then
 fi
 sudo mount -o ro $PRODUCT_IMAGE $PRODUCT/
 
-echo " - Mount system_ext"
-if [ ! -d "$SYSTEM_EXT/" ]; then
-   mkdir $SYSTEM_EXT
-fi
+if [ -f "$SYSTEM_EXT_IMAGE" ]; then
+   echo " - Mount system_ext"
+   if [ ! -d "$SYSTEM_EXT/" ]; then
+      mkdir $SYSTEM_EXT
+   fi
 sudo mount -o ro $SYSTEM_EXT_IMAGE $SYSTEM_EXT/
+fi
 
 echo "-> Copy system files to system_new"
 cp -v -r -p $SYSTEM/* $SYSTEM_NEW/ > /dev/null 2>&1 && sync
@@ -221,8 +223,10 @@ else
 fi
 cd $LOCALDIR
 
-echo " - Umount system_ext"
-sudo umount $SYSTEM_EXT/
+if [ -f "$SYSTEM_EXT_IMAGE" ]; then
+   echo " - Umount system_ext"
+   sudo umount $SYSTEM_EXT/
+fi
 
 echo " - Umount system_new"
 sudo umount $SYSTEM_NEW/
