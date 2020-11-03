@@ -79,7 +79,7 @@ if [ -f "$SYSTEM_NEW_IMAGE" ]; then
    fi
 else
    echo " - system_new.img don't exists, create one..."
-    sudo rm -rf $SYSTEM_NEW_IMAGE $SYSTEM_NEW/
+   sudo rm -rf $SYSTEM_NEW_IMAGE $SYSTEM_NEW/
    sudo dd if=/dev/zero of=$SYSTEM_NEW_IMAGE bs=4k count=2048576 > /dev/null 2>&1
    sudo tune2fs -c0 -i0 $SYSTEM_NEW_IMAGE > /dev/null 2>&1
    sudo mkfs.ext4 $SYSTEM_NEW_IMAGE > /dev/null 2>&1
@@ -178,7 +178,7 @@ fi
 sudo mount -o ro $PRODUCT_IMAGE $PRODUCT/
 
 if [ -f "$OPPRODUCT_IMAGE" ]; then
-   echo " - Mount product"
+   echo " - Mount opproduct"
    if [ ! -d "$OPPRODUCT/" ]; then
       mkdir $OPPRODUCT
    fi
