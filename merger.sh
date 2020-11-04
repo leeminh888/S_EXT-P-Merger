@@ -255,7 +255,7 @@ echo " - Umount product"
 sudo umount $PRODUCT/
 
 if [ -f "$ODM_IMAGE" ]; then
-echo "-> Copy odm files to system_new"
+   echo "-> Copy odm files to system_new"
    if [ -d "$SYSTEM_NEW/dev/" ]; then
       echo " - Using SAR method"
       cd $LOCALDIR/system_new/
@@ -263,7 +263,7 @@ echo "-> Copy odm files to system_new"
       mkdir -p odm/
       cp -v -r -p $ODM/* odm/ > /dev/null 2>&1
       cd ../
-      echo " - Fix symlink in opproduct"
+      echo " - Fix symlink in odm"
       ln -s /system/odm/ odm
       sync
       echo " - Fixed"
