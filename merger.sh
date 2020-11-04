@@ -26,6 +26,10 @@ SYSTEM_IMAGE="$LOCALDIR/system.img"
 PRODUCT="$LOCALDIR/product"
 PRODUCT_IMAGE="$LOCALDIR/product.img"
 
+## Mount Point vars for odm
+ODM="$LOCALDIR/odm"
+ODM_IMAGE="$LOCALDIR/odm.img"
+
 ## Mount Point vars for opproduct
 OPPRODUCT="$LOCALDIR/opproduct"
 OPPRODUCT_IMAGE="$LOCALDIR/opproduct.img"
@@ -127,6 +131,22 @@ else
    exit 1
 fi
 
+# odm.img
+echo "-> Check mount/etc for odm.img"
+if [ -f "$ODM_IMAGE" ]; then
+   echo " - odm detected!"
+   # Check if odm is mounted
+   if [ -d "$ODM" ]; then
+      if [ -d "$ODM/etc/" ]; then
+         echo " - Mount detected in odm, force umount!"
+         sudo umount "$ODM/"
+      fi
+   fi
+   echo " - Done: odm"
+else
+   echo " - odm don't exists, be careful!"
+fi
+
 # opproduct.img
 echo "-> Check mount/etc for opproduct.img"
 if [ -f "$OPPRODUCT_IMAGE" ]; then
@@ -177,6 +197,14 @@ if [ ! -d "$PRODUCT/" ]; then
 fi
 sudo mount -o ro $PRODUCT_IMAGE $PRODUCT/
 
+if [ -f "$ODM_IMAGE" ]; then
+   echo " - Mount odm"
+   if [ ! -d "$ODM/" ]; then
+      mkdir $ODM
+   fi
+   sudo mount -o ro $ODM_IMAGE $ODM/
+fi
+
 if [ -f "$OPPRODUCT_IMAGE" ]; then
    echo " - Mount opproduct"
    if [ ! -d "$OPPRODUCT/" ]; then
@@ -225,6 +253,38 @@ cd $LOCALDIR
 
 echo " - Umount product"
 sudo umount $PRODUCT/
+
+if [ -f "$ODM_IMAGE" ]; then
+echo "-> Copy odm files to system_new"
+   if [ -d "$SYSTEM_NEW/dev/" ]; then
+      echo " - Using SAR method"
+      cd $LOCALDIR/system_new/
+      rm -rf odm; cd system; rm -rf odm
+      mkdir -p odm/
+      cp -v -r -p $ODM/* odm/ > /dev/null 2>&1
+      cd ../
+      echo " - Fix symlink in opproduct"
+      ln -s /system/odm/ odm
+      sync
+      echo " - Fixed"
+else
+   if [ ! -f "$SYSTEM_NEW/build.prop" ]; then
+      echo " - Are you sure this is a Android image?"
+      exit 1
+   fi
+   cd $SYSTEM_NEW
+   rm -rf odm
+   mkdir odm && cd ../
+   cp -v -r -p $ODM/* $SYSTEM_NEW/odm/ > /dev/null 2>&1 && sync
+   cd $LOCALDIR
+   fi
+fi
+cd $LOCALDIR
+
+if [ -f "$ODM_IMAGE" ]; then
+   echo " - Umount odm"
+   sudo umount $ODM/
+fi
 
 if [ -f "$OPPRODUCT_IMAGE" ]; then
 echo "-> Copy opproduct files to system_new"
@@ -294,7 +354,7 @@ echo " - Umount system_new"
 sudo umount $SYSTEM_NEW/
 
 echo "-> Remove tmp folders and files"
-sudo rm -rf $SYSTEM $SYSTEM_NEW $PRODUCT $SYSTEM_IMAGE $PRODUCT_IMAGE $SYSTEM_EXT $SYSTEM_EXT_IMAGE $OPPRODUCT $OPPRODUCT_IMAGE
+sudo rm -rf $SYSTEM $SYSTEM_NEW $PRODUCT $SYSTEM_IMAGE $PRODUCT_IMAGE $SYSTEM_EXT $SYSTEM_EXT_IMAGE $OPPRODUCT $OPPRODUCT_IMAGE $ODM $ODM_IMAGE
 
 echo " - Zip system_new.img"
 zip system.img.zip system_new.img
