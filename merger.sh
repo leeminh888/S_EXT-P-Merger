@@ -57,6 +57,27 @@ else
    bash $FE/extractor.sh "$1" "$LOCALDIR"
 fi
 
+# system.img
+echo "-> Check mount/etc for system.img"
+if [ -f "$SYSTEM_IMAGE" ]; then
+   # Check for AB/Aonly in system
+   if [ -d "$SYSTEM" ]; then
+      if [ -d "$SYSTEM/dev/" ]; then
+         echo " - SAR Mount detected in system, force umount!"
+         sudo umount "$SYSTEM/"
+      else
+         if [ -d "$SYSTEM/etc/" ]; then
+            echo " - Aonly Mount detected in system, force umount!"
+            sudo umount "$SYSTEM/"
+         fi
+      fi
+   fi
+   echo " - Done: system"
+else
+   echo " - system don't exists, exit 1."
+   exit 1
+fi
+
 # system_new.img
 echo "-> Check mount/etc for system_new.img"
 if [ -f "$SYSTEM_NEW_IMAGE" ]; then
@@ -94,27 +115,6 @@ else
    echo " - Done: system_new"
 fi
 
-# system.img
-echo "-> Check mount/etc for system.img"
-if [ -f "$SYSTEM_IMAGE" ]; then
-   # Check for AB/Aonly in system
-   if [ -d "$SYSTEM" ]; then
-      if [ -d "$SYSTEM/dev/" ]; then
-         echo " - SAR Mount detected in system, force umount!"
-         sudo umount "$SYSTEM/"
-      else
-         if [ -d "$SYSTEM/etc/" ]; then
-            echo " - Aonly Mount detected in system, force umount!"
-            sudo umount "$SYSTEM/"
-         fi
-      fi
-   fi
-   echo " - Done: system"
-else
-   echo " - system don't exists, exit 1."
-   exit 1
-fi
-
 # product.img
 echo "-> Check mount/etc for product.img"
 if [ -f "$PRODUCT_IMAGE" ]; then
@@ -134,7 +134,6 @@ fi
 # odm.img
 echo "-> Check mount/etc for odm.img"
 if [ -f "$ODM_IMAGE" ]; then
-   echo " - odm detected!"
    # Check if odm is mounted
    if [ -d "$ODM" ]; then
       if [ -d "$ODM/etc/" ]; then
@@ -150,7 +149,6 @@ fi
 # opproduct.img
 echo "-> Check mount/etc for opproduct.img"
 if [ -f "$OPPRODUCT_IMAGE" ]; then
-   echo " - opproduct detected!"
    # Check if product is mounted
    if [ -d "$OPPRODUCT" ]; then
       if [ -d "$OPPRODUCT/etc/" ]; then
@@ -166,6 +164,7 @@ fi
 # product.img
 echo "-> Check mount/etc for system_ext.img"
 if [ -f "$SYSTEM_EXT_IMAGE" ]; then
+   echo " - Android 11 detected"
    # Check if product is mounted
    if [ -d "$SYSTEM_EXT" ]; then
       if [ -d "$SYSTEM_EXT/etc/" ]; then
@@ -218,12 +217,12 @@ if [ -f "$SYSTEM_EXT_IMAGE" ]; then
    if [ ! -d "$SYSTEM_EXT/" ]; then
       mkdir $SYSTEM_EXT
    fi
-sudo mount -o ro $SYSTEM_EXT_IMAGE $SYSTEM_EXT/
+   sudo mount -o ro $SYSTEM_EXT_IMAGE $SYSTEM_EXT/
 fi
 
 echo "-> Copy system files to system_new"
 cp -v -r -p $SYSTEM/* $SYSTEM_NEW/ > /dev/null 2>&1 && sync
-echo " - Umount system"
+echo "-> Umount system"
 umount $SYSTEM/
 
 echo "-> Copy product files to system_new"
@@ -251,7 +250,7 @@ else
 fi
 cd $LOCALDIR
 
-echo " - Umount product"
+echo "-> Umount product"
 sudo umount $PRODUCT/
 
 if [ -f "$ODM_IMAGE" ]; then
@@ -282,7 +281,7 @@ fi
 cd $LOCALDIR
 
 if [ -f "$ODM_IMAGE" ]; then
-   echo " - Umount odm"
+   echo "-> Umount odm"
    sudo umount $ODM/
 fi
 
@@ -314,7 +313,7 @@ fi
 cd $LOCALDIR
 
 if [ -f "$OPPRODUCT_IMAGE" ]; then
-   echo " - Umount opproduct"
+   echo "-> Umount opproduct"
    sudo umount $OPPRODUCT/
 fi
 
@@ -346,11 +345,11 @@ fi
 cd $LOCALDIR
 
 if [ -f "$SYSTEM_EXT_IMAGE" ]; then
-   echo " - Umount system_ext"
+   echo "-> Umount system_ext"
    sudo umount $SYSTEM_EXT/
 fi
 
-echo " - Umount system_new"
+echo "-> Umount system_new"
 sudo umount $SYSTEM_NEW/
 
 echo "-> Remove tmp folders and files"
@@ -361,4 +360,4 @@ zip system.img.zip system_new.img
 
 sudo rm -rf *.img
 
-echo "-> Done, just run with !jurl2gsi/url2GSI.sh."
+echo "-> Done, just run with url2GSI.sh"
