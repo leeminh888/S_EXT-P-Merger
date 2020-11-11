@@ -3,11 +3,11 @@
 # Merge S-P by YukoSky @ Treble-Experience
 # License: GPL3
 
-echo "#############################"
-echo "#                           #"
-echo "# S_EXT-P Merger by YukoSky #"
-echo "#                           #"
-echo "#############################"
+echo "##############################"
+echo "#                            #"
+echo "# S(EXT)-P Merger by YukoSky #"
+echo "#                            #"
+echo "##############################"
 echo ""
 
 ### Initial vars
@@ -37,6 +37,16 @@ OPPRODUCT_IMAGE="$LOCALDIR/opproduct.img"
 ## Mount Point vars for system_ext
 SYSTEM_EXT="$LOCALDIR/system_ext"
 SYSTEM_EXT_IMAGE="$LOCALDIR/system_ext.img"
+
+CREDITS() {
+   # Just a comment in build.prop
+   echo "" >> build.prop
+   echo "#############################" >> build.prop
+   echo "# Merged by S(EXT)-P Merger #" >> build.prop
+   echo "#        By YukoSky         #" >> build.prop
+   echo "#############################" >> build.prop
+   echo "" >> build.prop
+}
 
 usage() {
     echo "Usage: $0 <Path to firmware>"
@@ -222,8 +232,20 @@ fi
 
 echo "-> Copy system files to system_new"
 cp -v -r -p $SYSTEM/* $SYSTEM_NEW/ > /dev/null 2>&1 && sync
+if [ -d "$SYSTEM_NEW/dev/" ]; then
+   cd $LOCALDIR/system_new/system/
+   CREDITS
+else
+   if [ ! -f "$SYSTEM_NEW/build.prop" ]; then
+      echo "-> Are you sure this is a Android image? Exit"
+      exit 1
+   fi
+   cd $SYSTEM_NEW
+   CREDITS
+fi
 echo "-> Umount system"
 umount $SYSTEM/
+cd $LOCALDIR
 
 echo "-> Copy product files to system_new"
 if [ -d "$SYSTEM_NEW/dev/" ]; then
@@ -239,7 +261,7 @@ if [ -d "$SYSTEM_NEW/dev/" ]; then
    echo " - Fixed"
 else
    if [ ! -f "$SYSTEM_NEW/build.prop" ]; then
-      echo " - Are you sure this is a Android image?"
+      echo "-> Are you sure this is a Android image? Exit"
       exit 1
    fi
    cd $SYSTEM_NEW
@@ -268,7 +290,7 @@ if [ -f "$ODM_IMAGE" ]; then
       echo " - Fixed"
 else
    if [ ! -f "$SYSTEM_NEW/build.prop" ]; then
-      echo " - Are you sure this is a Android image?"
+      echo "-> Are you sure this is a Android image? Exit"
       exit 1
    fi
    cd $SYSTEM_NEW
@@ -300,7 +322,7 @@ echo "-> Copy opproduct files to system_new"
       echo " - Fixed"
 else
    if [ ! -f "$SYSTEM_NEW/build.prop" ]; then
-      echo " - Are you sure this is a Android image?"
+      echo "-> Are you sure this is a Android image? Exit"
       exit 1
    fi
    cd $SYSTEM_NEW
@@ -332,7 +354,7 @@ echo "-> Copy system_ext files to system_new"
       echo " - Fixed"
 else
    if [ ! -f "$SYSTEM_NEW/build.prop" ]; then
-      echo " - Are you sure this is a Android image?"
+      echo "-> Are you sure this is a Android image? Exit"
       exit 1
    fi
    cd $SYSTEM_NEW
