@@ -3,10 +3,11 @@
 # Merge S-P by YukoSky @ Treble-Experience
 # License: GPL3
 
+echo ""
 echo "##############################"
 echo "#                            #"
 echo "# S(EXT)-P Merger by YukoSky #"
-echo "#           v1.3             #"
+echo "#         v1.3-Fix           #"
 echo "#                            #"
 echo "##############################"
 echo ""
@@ -74,23 +75,23 @@ do
 key="$1"
 
 case $key in
-    --product|-p)
+    --product)
     PRODUCT=true
     shift
     ;;
-    --odm|-o)
+    --odm)
     ODM=true
     shift
     ;;
-    --system_ext|-ext)
+    --ext)
     SYSTEM_EXT=true
     shift
     ;;
-    --opproduct|-op)
+    --opproduct)
     OPPRODUCT=true
     shift
     ;;
-    --overlays|-ov)
+    --overlays)
     OVERLAYS_VENDOR=true
     shift
     ;;
@@ -109,16 +110,18 @@ set -- "${POSITIONAL[@]}" # restore positional
 if [ ! -f "$FE/extractor.sh" ]; then
    echo "-> Firmware Extractor isn't cloned or don't exists! Exit 1."
    exit 1
-else
-   if [ "$2" == "" ]; then
-      echo "-> Enter all needed parameters."
-      usage
-      exit 1
-   fi
-   echo "-> Starting the process..."
-   cd $FE; chmod +x -R *
-   bash $FE/extractor.sh "$1" "$LOCALDIR"
 fi
+
+if [[ ! -n $1 ]]; then
+    echo "-> ERROR!"
+    echo " - Enter all needed parameters"
+    usage
+    exit
+fi
+
+echo "-> Starting the process..."
+cd $FE; chmod +x -R *
+bash $FE/extractor.sh "$1" "$LOCALDIR"
 
 # system.img
 echo "-> Check mount/etc for system.img"
@@ -338,7 +341,7 @@ if [ "$OVERLAYS_VENDOR" == true ]; then
 fi
 
 echo "-> Copy system files to system_new"
-cp -v -r -p $SYSTEM/* $SYSTEM_NEW_DIR/ > /dev/null 2>&1 && sync
+cp -v -r -p $SYSTEM_DIR/* $SYSTEM_NEW_DIR/ > /dev/null 2>&1 && sync
 if [ -d "$SYSTEM_NEW_DIR/dev/" ]; then
    cd $LOCALDIR/system_new/system/
    CREDITS
