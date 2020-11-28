@@ -7,7 +7,7 @@ echo ""
 echo "##############################"
 echo "#                            #"
 echo "# S(EXT)-P Merger by YukoSky #"
-echo "#         v1.3-Fix           #"
+echo "#            v1.4            #"
 echo "#                            #"
 echo "##############################"
 echo ""
@@ -19,6 +19,7 @@ FE="$LOCALDIR/tools/firmware_extractor"
 ## Mount Point vars for system_new
 SYSTEM_NEW_DIR="$LOCALDIR/system_new"
 SYSTEM_NEW_IMAGE="$LOCALDIR/system_new.img"
+SYSTEM_NEW=false
 
 ## Mount Point vars for system
 SYSTEM_DIR="$LOCALDIR/system"
@@ -77,18 +78,22 @@ key="$1"
 case $key in
     --product)
     PRODUCT=true
+    SYSTEM_NEW=true
     shift
     ;;
     --odm)
     ODM=true
+    SYSTEM_NEW=true
     shift
     ;;
     --ext)
     SYSTEM_EXT=true
+    SYSTEM_NEW=true
     shift
     ;;
     --opproduct)
     OPPRODUCT=true
+    SYSTEM_NEW=true
     shift
     ;;
     --overlays)
@@ -124,61 +129,65 @@ cd $FE; chmod +x -R *
 bash $FE/extractor.sh "$1" "$LOCALDIR"
 
 # system.img
-echo "-> Check mount/etc for system.img"
-if [ -f "$SYSTEM_IMAGE" ]; then
-   # Check for AB/Aonly in system
-   if [ -d "$SYSTEM_DIR" ]; then
-      if [ -d "$SYSTEM_DIR/dev/" ]; then
-         echo " - SAR Mount detected in system, force umount!"
-         sudo umount "$SYSTEM_DIR/"
-      else
-         if [ -d "$SYSTEM_DIR/etc/" ]; then
-            echo " - Aonly Mount detected in system, force umount!"
-            sudo umount "$SYSTEM_DIR/"
+if [ "$SYSTEM_NEW" == true ]; then
+   echo "-> Check mount/etc for system.img"
+   if [ -f "$SYSTEM_IMAGE" ]; then
+      # Check for AB/Aonly in system
+      if [ -d "$SYSTEM_DIR" ]; then
+         if [ -d "$SYSTEM_DIR/dev/" ]; then
+            echo " - SAR Mount detected in system, force umount!"
+             sudo umount "$SYSTEM_DIR/"
+         else
+            if [ -d "$SYSTEM_DIR/etc/" ]; then
+               echo " - Aonly Mount detected in system, force umount!"
+               sudo umount "$SYSTEM_DIR/"
+            fi
          fi
       fi
+      echo " - Done: system"
+   else
+      echo " - system don't exists, exit 1."
+      exit 1
    fi
-   echo " - Done: system"
-else
-   echo " - system don't exists, exit 1."
-   exit 1
 fi
 
 # system_new.img
-echo "-> Check mount/etc for system_new"
-if [ -f "$SYSTEM_NEW_IMAGE" ]; then
-   # Check for AB/Aonly in system_new
-   if [ -d "$SYSTEM_NEW_DIR" ]; then
-      if [ -d "$SYSTEM_NEW_DIR/dev/" ]; then
-         echo " - SAR Mount detected in system_new, force umount!"
-         sudo "$SYSTEM_NEW_DIR/"
-      else
-         if [ -d "$SYSTEM_NEW_DIR/etc/" ]; then
-            echo " - Aonly Mount detected in system_new, force umount!"
+if [ "$SYSTEM_NEW" == true ]; then
+   echo "-> Check mount/etc for system_new"
+   if [ -f "$SYSTEM_NEW_IMAGE" ]; then
+      # Check for AB/Aonly in system_new
+      if [ -d "$SYSTEM_NEW_DIR" ]; then
+         if [ -d "$SYSTEM_NEW_DIR/dev/" ]; then
+            echo " - SAR Mount detected in system_new, force umount!"
             sudo "$SYSTEM_NEW_DIR/"
+         else
+            if [ -d "$SYSTEM_NEW_DIR/etc/" ]; then
+               echo " - Aonly Mount detected in system_new, force umount!"
+               sudo "$SYSTEM_NEW_DIR/"
+            fi
          fi
       fi
+      echo " - Delete: system_new and mount point"
+      sudo rm -rf $SYSTEM_NEW_IMAGE $SYSTEM_NEW_DIR/
+      sudo dd if=/dev/zero of=$SYSTEM_NEW_IMAGE bs=4k count=2048576 > /dev/null 2>&1
+      sudo tune2fs -c0 -i0 $SYSTEM_NEW_IMAGE > /dev/null 2>&1
+      sudo mkfs.ext4 $SYSTEM_NEW_IMAGE > /dev/null 2>&1
+      if [ ! -f "$SYSTEM_NEW_IMAGE" ]; then
+         echo " - system_new don't exists, exit 1."
+         exit 1
+      fi
+   else
+      echo " - system_new.img don't exists, create one..."
+      sudo rm -rf $SYSTEM_NEW_IMAGE $SYSTEM_NEW_DIR/
+      sudo dd if=/dev/zero of=$SYSTEM_NEW_IMAGE bs=4k count=2048576 > /dev/null 2>&1
+      sudo tune2fs -c0 -i0 $SYSTEM_NEW_IMAGE > /dev/null 2>&1
+      sudo mkfs.ext4 $SYSTEM_NEW_IMAGE > /dev/null 2>&1
+      if [ ! -f "$SYSTEM_NEW_IMAGE" ]; then
+         echo " - system_new don't exists, exit 1."
+         exit 1
+      fi
+      echo " - Done: system_new"
    fi
-   echo " - Delete: system_new and mount point"
-   sudo rm -rf $SYSTEM_NEW_IMAGE $SYSTEM_NEW_DIR/
-   sudo dd if=/dev/zero of=$SYSTEM_NEW_IMAGE bs=4k count=2048576 > /dev/null 2>&1
-   sudo tune2fs -c0 -i0 $SYSTEM_NEW_IMAGE > /dev/null 2>&1
-   sudo mkfs.ext4 $SYSTEM_NEW_IMAGE > /dev/null 2>&1
-   if [ ! -f "$SYSTEM_NEW_IMAGE" ]; then
-      echo " - system_new don't exists, exit 1."
-      exit 1
-   fi
-else
-   echo " - system_new.img don't exists, create one..."
-   sudo rm -rf $SYSTEM_NEW_IMAGE $SYSTEM_NEW_DIR/
-   sudo dd if=/dev/zero of=$SYSTEM_NEW_IMAGE bs=4k count=2048576 > /dev/null 2>&1
-   sudo tune2fs -c0 -i0 $SYSTEM_NEW_IMAGE > /dev/null 2>&1
-   sudo mkfs.ext4 $SYSTEM_NEW_IMAGE > /dev/null 2>&1
-   if [ ! -f "$SYSTEM_NEW_IMAGE" ]; then
-      echo " - system_new don't exists, exit 1."
-      exit 1
-   fi
-   echo " - Done: system_new"
 fi
 
 # product.img
@@ -278,17 +287,23 @@ fi
 
 echo "-> Starting process!"
 
-echo " - Mount system"
-if [ ! -d "$SYSTEM_DIR/" ]; then
-   mkdir $SYSTEM_DIR
+if [ "$SYSTEM_NEW" == true ]; then
+   if [ -f "$SYSTEM_IMAGE" ]; then
+      echo " - Mount system"
+      if [ ! -d "$SYSTEM_DIR/" ]; then
+         mkdir $SYSTEM_DIR
+      fi
+      sudo mount -o ro $SYSTEM_IMAGE $SYSTEM_DIR/
+   fi
 fi
-sudo mount -o ro $SYSTEM_IMAGE $SYSTEM_DIR/
 
-echo " - Mount system_new"
-if [ ! -d "$SYSTEM_NEW_DIR/" ]; then
-   mkdir $SYSTEM_NEW_DIR
+if [ "$SYSTEM_NEW" == true ]; then
+   echo " - Mount system_new"
+   if [ ! -d "$SYSTEM_NEW_DIR/" ]; then
+      mkdir $SYSTEM_NEW_DIR
+   fi
+   sudo mount -o loop $SYSTEM_NEW_IMAGE $SYSTEM_NEW_DIR/
 fi
-sudo mount -o loop $SYSTEM_NEW_IMAGE $SYSTEM_NEW_DIR/
 
 if [ "$PRODUCT" == true ]; then
    if [ -f "$PRODUCT_IMAGE" ]; then
@@ -321,40 +336,42 @@ if [ "$OPPRODUCT" == true ]; then
 fi
 
 if [ "$SYSTEM_EXT" == true ]; then
-  if [ -f "$SYSTEM_EXT_IMAGE" ]; then
-    echo " - Mount system_ext"
-    if [ ! -d "$SYSTEM_EXT_DIR/" ]; then
-      mkdir $SYSTEM_EXT_DIR
-    fi
-    sudo mount -o ro $SYSTEM_EXT_IMAGE $SYSTEM_EXT_DIR/
-  fi
+   if [ -f "$SYSTEM_EXT_IMAGE" ]; then
+      echo " - Mount system_ext"
+      if [ ! -d "$SYSTEM_EXT_DIR/" ]; then
+         mkdir $SYSTEM_EXT_DIR
+      fi
+      sudo mount -o ro $SYSTEM_EXT_IMAGE $SYSTEM_EXT_DIR/
+   fi
 fi
 
 if [ "$OVERLAYS_VENDOR" == true ]; then
-  if [ -f "$VENDOR_IMAGE" ]; then
-    echo " - Mount vendor"
-    if [ ! -d "$VENDOR_DIR/" ]; then
-       mkdir $VENDOR_DIR
-    fi
-    sudo mount -o ro $VENDOR_IMAGE $VENDOR_DIR
-  fi
+   if [ -f "$VENDOR_IMAGE" ]; then
+      echo " - Mount vendor"
+      if [ ! -d "$VENDOR_DIR/" ]; then
+         mkdir $VENDOR_DIR
+      fi
+      sudo mount -o ro $VENDOR_IMAGE $VENDOR_DIR
+   fi
 fi
 
-echo "-> Copy system files to system_new"
-cp -v -r -p $SYSTEM_DIR/* $SYSTEM_NEW_DIR/ > /dev/null 2>&1 && sync
-if [ -d "$SYSTEM_NEW_DIR/dev/" ]; then
-   cd $LOCALDIR/system_new/system/
-   CREDITS
-else
-   if [ ! -f "$SYSTEM_NEW_DIR/build.prop" ]; then
-      echo "-> Are you sure this is a Android image? Exit"
-      exit 1
+if [ "$SYSTEM_NEW" == true ]; then
+   echo "-> Copy system files to system_new"
+   cp -v -r -p $SYSTEM_DIR/* $SYSTEM_NEW_DIR/ > /dev/null 2>&1 && sync
+   if [ -d "$SYSTEM_NEW_DIR/dev/" ]; then
+      cd $LOCALDIR/system_new/system/
+      CREDITS
+   else
+      if [ ! -f "$SYSTEM_NEW_DIR/build.prop" ]; then
+         echo "-> Are you sure this is a Android image? Exit"
+         exit 1
+      fi
+      cd $SYSTEM_NEW_DIR
+      CREDITS
    fi
-   cd $SYSTEM_NEW_DIR
-   CREDITS
+   echo "-> Umount system"
+   umount $SYSTEM_DIR/
 fi
-echo "-> Umount system"
-umount $SYSTEM_DIR/
 cd $LOCALDIR
 
 if [ "$PRODUCT" == true ]; then
@@ -501,8 +518,10 @@ if [ "$SYSTEM_EXT" == true ]; then
    fi
 fi
 
-echo "-> Umount system_new"
-sudo umount $SYSTEM_NEW_DIR/
+if [ "$SYSTEM_NEW" == true ]; then
+   echo "-> Umount system_new"
+   sudo umount $SYSTEM_NEW_DIR/
+fi
 
 if [ "$OVERLAYS_VENDOR" == true ]; then
    if [ -f "$VENDOR_IMAGE" ]; then
@@ -511,8 +530,9 @@ if [ "$OVERLAYS_VENDOR" == true ]; then
          # If yes we'll copy overlays
          echo " - Copying overlays from vendor..."
          mkdir -p "$LOCALDIR/vendorOverlays"
-         cp -v -r -p $VENDOR_DIR/overlay/* $LOCALDIR/vendorOverlays/ > /dev/null 2>&1
-         zip -r vendorOverlays.zip "$LOCALDIR/vendorOverlays" > /dev/null 2>&1
+         cp -v -r -p $VENDOR_DIR/overlay/* vendorOverlays/ > /dev/null 2>&1
+         rm -rf vendorOverlays/home/
+         zip -r vendorOverlays.zip vendorOverlays/ > /dev/null 2>&1
          echo " - Process of copying vendor overlays is done"
          rm -rf $LOCALDIR/vendorOverlays/
       fi
@@ -529,10 +549,11 @@ fi
 echo "-> Remove tmp folders and files"
 sudo rm -rf $SYSTEM_DIR $SYSTEM_NEW_DIR $PRODUCT_DIR $SYSTEM_IMAGE $PRODUCT_IMAGE $SYSTEM_EXT_DIR $SYSTEM_EXT_IMAGE $OPPRODUCT_DIR $OPPRODUCT_IMAGE $ODM_DIR $ODM_IMAGE $VENDOR_DIR $VENDOR_IMAGE
 
-echo " - Compacting..."
-mv system_new.img system.img
-zip system.img.zip system.img
+if [ "$SYSTEM_NEW" == true ]; then
+   echo " - Compacting..."
+   mv system_new.img system.img
+   zip system.img.zip system.img
+   sudo rm -rf *.img
+fi
 
-sudo rm -rf *.img
-
-echo "-> Done, just run with url2GSI.sh"
+echo "-> Work done."
