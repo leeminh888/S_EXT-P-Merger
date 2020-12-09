@@ -69,11 +69,11 @@ if [ -f "$SYSTEM_NEW_IMAGE" ]; then
    if [ -d "$SYSTEM_NEW" ]; then
       if [ -d "$SYSTEM_NEW/dev/" ]; then
          echo " - SAR Mount detected in system_new, force umount!"
-         sudo "$SYSTEM_NEW/"
+         sudo umount "$SYSTEM_NEW/"
       else
          if [ -d "$SYSTEM_NEW/etc/" ]; then
             echo " - Aonly Mount detected in system_new, force umount!"
-            sudo "$SYSTEM_NEW/"
+            sudo umount "$SYSTEM_NEW/"
          fi
       fi
    fi
