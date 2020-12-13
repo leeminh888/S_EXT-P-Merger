@@ -6,30 +6,31 @@
 echo "##############################"
 echo "#                            #"
 echo "# S(EXT)-P Merger by YukoSky #"
-echo "#           v1.2             #"
+echo "#         v1.5-Alpha         #"
 echo "#                            #"
 echo "##############################"
 echo ""
 
 ### Initial vars
 LOCALDIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
+WORKING="$WORKING/working"
 FE="$LOCALDIR/tools/firmware_extractor"
 
 ## Mount Point vars for system_new
-SYSTEM_NEW="$LOCALDIR/system_new"
-SYSTEM_NEW_IMAGE="$LOCALDIR/system_new.img"
+SYSTEM_NEW="$WORKING/system_new"
+SYSTEM_NEW_IMAGE="$WORKING/system_new.img"
 
 ## Mount Point vars for system
-SYSTEM="$LOCALDIR/system"
-SYSTEM_IMAGE="$LOCALDIR/super_2.img"
+SYSTEM="$WORKING/system"
+SYSTEM_IMAGE="$WORKING/super_2.img"
 
 ## Mount Point vars for product
-PRODUCT="$LOCALDIR/product"
-PRODUCT_IMAGE="$LOCALDIR/super_3.img"
+PRODUCT="$WORKING/product"
+PRODUCT_IMAGE="$WORKING/super_3.img"
 
 ## Mount Point vars for odm
-ODM="$LOCALDIR/odm"
-ODM_IMAGE="$LOCALDIR/super_5.img"
+ODM="$WORKING/odm"
+ODM_IMAGE="$WORKING/super_5.img"
 
 CREDITS() {
    # Just a comment in build.prop
@@ -237,11 +238,14 @@ fi
 echo "-> Umount system_new"
 sudo umount $SYSTEM_NEW/
 
+mv $WORKING/system_new.img $WORKING/system.tmp
 echo "-> Remove tmp folders and files"
-sudo rm -rf $SYSTEM $SYSTEM_NEW $PRODUCT $SYSTEM_IMAGE $PRODUCT_IMAGE $ODM $ODM_IMAGE
+sudo rm -rf $SYSTEM $SYSTEM_NEW $PRODUCT $SYSTEM_IMAGE $PRODUCT_IMAGE $ODM $ODM_IMAGE $WORKING/*.img
 
-echo " - Zip system_new.img"
-zip system.img.zip system_new.img
+echo " - Compacting..."
+mv system.tmp system.img
+zip system.img.zip system.img
+sudo rm -rf *.img
 
 sudo rm -rf *.img
 
