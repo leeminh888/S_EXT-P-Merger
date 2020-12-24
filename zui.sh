@@ -212,10 +212,18 @@ if [ -f "$ODM_IMAGE" ]; then
       mkdir -p odm/
       cp -v -r -p $ODM/* odm/ > /dev/null 2>&1
       cd ../
-      echo " - Fix symlink in odm"
-      ln -s /system/odm/ odm
-      sync
-      echo " - Fixed"
+      mkdir odm
+      cd odm
+      ln -s /vendor/odm/app app
+      ln -s /vendor/odm/bin bin
+      ln -s /vendor/odm/app etc
+      ln -s /vendor/odm/firmware firmware
+      ln -s /vendor/odm/framework framework
+      ln -s /vendor/odm/lib lib
+      ln -s /vendor/odm/lib64 lib64
+      ln -s /vendor/odm/overlay overlay
+      ln -s /vendor/odm/priv-app priv-app
+      ln -s /vendor/odm/usr usr
 else
    if [ ! -f "$SYSTEM_NEW/build.prop" ]; then
       echo "-> Are you sure this is a Android image? Exit"
