@@ -26,5 +26,5 @@ If you get syntax errors run dos2unix on extractor.sh
 ## How to use
 ### Download
 ```
-git clone --recurse-submodules https://github.com/YuMiGSIs/S_EXT-P-Merger.git
+git clone --recurse-submodules https://github.com/Velosh/S_EXT-P-Merger.git
 ```
